@@ -189,10 +189,8 @@ def probe_mqtt():
 
 def ssh(command, timeout):
     # Non-interactive sessions don't get the add-on's SUPERVISOR_TOKEN, which the
-    # ha CLI needs; load it from the s6 container environment. (Backticks rather
-    # than the usual shell substitution: the script is embedded in a compose file,
-    # which would interpolate it.)
-    command = ("export SUPERVISOR_TOKEN=\"`cat /run/s6/container_environment/SUPERVISOR_TOKEN`\"; "
+    # ha CLI needs; load it from the s6 container environment.
+    command = ('export SUPERVISOR_TOKEN="$(cat /run/s6/container_environment/SUPERVISOR_TOKEN)"; '
                + command)
     args = [
         "ssh", "-i", cfg("SSH_KEY"), "-p", cfg("SSH_PORT"),

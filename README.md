@@ -42,8 +42,8 @@ reconnecting.
 
 1. Configure: copy `.env.example` to `.env` and fill it in, or enter the same
    variables as Portainer stack environment variables. `HA_URL` is the only required one.
-2. Deploy `docker-compose.yml`: `docker compose up -d`, or create a Portainer stack
-   (web editor or this git repository).
+2. Deploy `docker-compose.yml`, which uses the prebuilt image: `docker compose up -d`,
+   or paste it into a Portainer stack.
 3. Authorize the watchdog's SSH key. On first start it generates a key pair in the
    `ha-watchdog-data` volume and logs the public key:
    ```bash
@@ -73,17 +73,27 @@ Thresholds, grace periods and backoff are in `DEFAULTS` at the top of
 `watchdog.py`, and any of them can be overridden with an environment variable of
 the same name.
 
+## Image
+
+The image is `ghcr.io/wolfson292/ha-watchdog` (linux/amd64 and linux/arm64),
+built by GitHub Actions from the `Dockerfile`:
+
+| Tag | Built from |
+|---|---|
+| `latest` | every push to `main` |
+| `1.2.3`, `1.2` | a `v1.2.3` git tag |
+| `sha-<commit>` | every build |
+
+Pin a version tag in `docker-compose.yml` if you'd rather upgrade deliberately.
+
 ## Development
 
-`docker-compose.yml` is generated: the script is embedded as an inline compose
-config, so the stack is a single self-contained file. After editing
-`watchdog.py` or `compose.template.yml`:
+Edit `watchdog.py`, push to `main`, and wait for the "Build image" workflow. Then
+pull and recreate the container: `docker compose pull && docker compose up -d`, or
+in Portainer, update the stack with **Re-pull image** enabled.
+
+To build locally:
 
 ```bash
-python3 render_compose.py
+docker build -t ha-watchdog .
 ```
-
-The script must not contain `$` characters, because compose interpolates them.
-When redeploying, **recreate** the container (for example `docker compose up -d
---force-recreate`, or stop and start the Portainer stack). Compose doesn't
-recreate it when only config content changes.
