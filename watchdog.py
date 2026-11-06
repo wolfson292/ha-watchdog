@@ -145,9 +145,19 @@ def probe_web():
     if not tcp_open(HA_HOST, HA_PORT):
         return False, f"port {HA_PORT} closed"
     results = []
-    # Unauthenticated /api/ must answer 401 quickly.
-    code, secs = http_status("/api/")
-    results.append(("api", code == 401, code, secs))
+    # /api/ must answer quickly. With a token it answers 200; without one it
+    # answers 401, but HA then logs every probe as a failed login and raises a
+    # "Login attempt failed" notification, so send the token when we have one.
+    # A 401 with a token still means Core is responsive (the token was revoked),
+    # so it counts as healthy here; restarting HA would not fix a bad token.
+    if HA_TOKEN:
+        code, secs = http_status("/api/", {"Authorization": f"Bearer {HA_TOKEN}"})
+        if code == 401:
+            log("HA_TOKEN was rejected by /api/ (401); replace it to stop failed-login notices")
+        results.append(("api", code in (200, 401), code, secs))
+    else:
+        code, secs = http_status("/api/")
+        results.append(("api", code == 401, code, secs))
     # Static file with compression, which is what browsers request.
     code, secs = http_status("/static/icons/favicon.ico", {"Accept-Encoding": "gzip, br"})
     results.append(("static", code == 200, code, secs))

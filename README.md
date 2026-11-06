@@ -14,7 +14,7 @@ reconnecting.
 
 | Probe | Healthy | Why |
 |---|---|---|
-| `GET /api/` | 401 within 15s | Needs Core's executor; hangs when Core is wedged even though `/` still answers |
+| `GET /api/` | 200 within 15s with `HA_TOKEN` (401 without one) | Needs Core's executor; hangs when Core is wedged even though `/` still answers. Without a token HA logs every probe as a failed login, so set `HA_TOKEN` |
 | `GET /static/icons/favicon.ico` (gzip) | 200 within 15s | The same failure leaves browsers stuck on "Loading..." |
 | MQTT canaries (optional) | at least one updated in the last 10 min | Catches the MQTT client stuck disconnected while the broker is fine |
 
